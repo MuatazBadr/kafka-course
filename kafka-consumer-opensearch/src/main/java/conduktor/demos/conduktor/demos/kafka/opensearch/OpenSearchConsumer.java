@@ -81,6 +81,7 @@ public class OpenSearchConsumer {
         properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         // create consumer
         return new KafkaConsumer<>(properties);
@@ -148,9 +149,11 @@ public class OpenSearchConsumer {
                         IndexRequest indexRequest = new IndexRequest("wikimedia")
                                 .source(record.value(), MediaTypeRegistry.JSON) // specify that we are sending json data to openSearch
                                 .id(id); // by assigning an id we made the consumer entry idempotent and avoid data duplication
+
+
                         // send in the index request (document) to OpenSearch to insert it in the index
                         IndexResponse indexResponse = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
-                        log.info("Inserted 1 document into OpenSearch, with id: " + indexResponse.getId());
+                        //log.info("Inserted 1 document into OpenSearch, with id: " + indexResponse.getId());
                     } catch (Exception e) {
 
                     }
@@ -158,6 +161,10 @@ public class OpenSearchConsumer {
 
 
                 }
+
+                // commit offsets after the batch is consumed
+                consumer.commitSync();
+                log.info("Offsets have been committed!");
 
             }
         }
