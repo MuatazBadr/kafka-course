@@ -1,5 +1,6 @@
 package conduktor.demos.conduktor.demos.kafka.opensearch;
 
+import com.google.gson.JsonParser;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -86,6 +87,15 @@ public class OpenSearchConsumer {
 
     }
 
+
+
+    private static String extractId(String jsonValue) {
+        //gson library
+        return JsonParser.parseString(jsonValue).
+                getAsJsonObject().get("meta").
+                getAsJsonObject().get("id").getAsString();
+    }
+
     public static void main(String[] args) throws IOException {
 
         Logger log = LoggerFactory.getLogger(OpenSearchConsumer.class.getSimpleName());
@@ -123,11 +133,21 @@ public class OpenSearchConsumer {
                 log.info("Received " + recordCount + " record(s)");
 
                 for (ConsumerRecord<String,String> record: records) {
+                    // send the record into OpenSearch
+
+                    // Strategy 1 of extracting ID for a message
+                    //define an ID using Kafka Record coordinates
+                   // String id = record.topic() + "_" + record.partition() + "_" + record.offset();
 
                     try {
+                        // strategy 2
+                        // we extract the ID from the JSON value
+                        String id = extractId(record.value());
+
                         // create and index request of the record to OpenSearch
                         IndexRequest indexRequest = new IndexRequest("wikimedia")
-                                .source(record.value(), MediaTypeRegistry.JSON); // specify that we are sending json data to openSearch
+                                .source(record.value(), MediaTypeRegistry.JSON) // specify that we are sending json data to openSearch
+                                .id(id); // by assigning an id we made the consumer entry idempotent and avoid data duplication
                         // send in the index request (document) to OpenSearch to insert it in the index
                         IndexResponse indexResponse = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
                         log.info("Inserted 1 document into OpenSearch, with id: " + indexResponse.getId());
@@ -149,4 +169,5 @@ public class OpenSearchConsumer {
         //close things
 
     }
+
 }

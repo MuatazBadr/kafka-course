@@ -22,8 +22,9 @@ dependencies {
     //https://central.sonatype.com/artifact/org.opensearch.client/opensearch-rest-high-level-client/overview
     implementation("org.opensearch.client:opensearch-rest-high-level-client:2.15.0")
 
-    //https://central.sonatype.com/artifact/org.kie.modules/com-google-code-gson
-    implementation("org.kie.modules:com-google-code-gson:6.5.0.Final")
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation("com.google.code.gson:gson:2.11.0")
+
 
 }
 
